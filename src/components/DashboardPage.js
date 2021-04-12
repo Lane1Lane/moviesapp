@@ -16,7 +16,7 @@ const DashboardPage = (props) => {
   const dispatch = useDispatch();
 
   const movies = useSelector(state => selectMovies(state.movies,searchText).sort((a, b) => {
-        return (b.Title < a.Title) ? 1 : -1;
+        return (b.Title.toLowerCase() < a.Title.toLowerCase()) ? 1 : -1;
     }));
   const pageNumbers = useSelector(state => {
     let pageNumbers = [];
@@ -32,10 +32,11 @@ const DashboardPage = (props) => {
     const reader = new FileReader()
     reader.onload = async (e) => { 
       const text = (e.target.result);
-      text.split("\r\n\r\n").map(movie => {let arr = movie.split("\r\n").map(movie => {let obj = {}; let arr = movie.split(": "); obj[arr[0]]=arr[1]; return obj}); return Object.assign({},...arr)}).forEach(movie => dispatch(startAddMovie(movie)));
+      text.includes("\r\n") ? text.split("\r\n\r\n").map(movie => {let arr = movie.split("\r\n").map(movie => {let obj = {}; let arr = movie.split(": "); obj[arr[0]]=arr[1]; return obj}); return Object.assign({},...arr)}).forEach(movie => dispatch(startAddMovie(movie))) :
+      text.split("\n\n").map(movie => {let arr = movie.split("\n").map(movie => {let obj = {}; let arr = movie.split(": "); obj[arr[0]]=arr[1]; return obj}); return Object.assign({},...arr)}).forEach(movie => dispatch(startAddMovie(movie)));;
     };
     reader.readAsText(e.target.files[0])
-  }
+  };
 
   return (
     <div className="content-container">
@@ -46,7 +47,7 @@ const DashboardPage = (props) => {
           onChange={(e)=>showFile(e)} 
         />
         <div>
-            <Link className="button" to="/create">Добавить фильм</Link>
+            <Link className="button" to="/create">Add movie</Link>
         </div>
       </div>
 
@@ -55,9 +56,9 @@ const DashboardPage = (props) => {
           className="text-input"
           value={searchText}
           onChange={(e) => {setCurrentPage(1); setSearchText(e.target.value)}}
-          placeholder="Поиск по названию фильма или актерам"
+          placeholder="Search by Title or Stars"
       />
-
+      {!movies.length && searchText ? 'Nothing found' : ''}
       {movies.slice((currentPage-1)*moviesInPage,currentPage*moviesInPage).map(movie => <MoviesRow {...movie} key={movie.id}/>)}
       <ul className="page-numbers">
         {pageNumbers.map(number => <li key={number} id={number} onClick={(e) => {setCurrentPage(e.target.id); dispatch(setCurrentPageBase(e.target.id))}} className={number === parseInt(currentPage) ? 'selected-list' : ''}>{number}</li>)}
