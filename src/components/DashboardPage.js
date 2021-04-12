@@ -18,6 +18,9 @@ const DashboardPage = (props) => {
   const movies = useSelector(state => selectMovies(state.movies,searchText).sort((a, b) => {
         return (b.Title.toLowerCase() < a.Title.toLowerCase()) ? 1 : -1;
     }));
+
+  const moviesAll = useSelector(state => state.movies);
+
   const pageNumbers = useSelector(state => {
     let pageNumbers = [];
     for (let i = 1; i <= Math.ceil(selectMovies(state.movies,searchText).length / moviesInPage); i++) {
@@ -26,14 +29,25 @@ const DashboardPage = (props) => {
     return pageNumbers;
   });
 
+  const check = (movie) => {
+    let error = false;
+    if (!movie.Title || !movie['Release Year'] || !movie.Format || !movie.Stars ) {error = true} else
+    {if (movie['Release Year'] && (movie['Release Year'] < 1850 || movie['Release Year'] > 2020)) {error = true} else
+    {const movieExist = moviesAll.find(movieA => (movieA.Title.toLowerCase() === movie.Title.toLowerCase() && movieA.Format === movie.Format && movieA['Release Year'] === movie['Release Year'] && movieA.Stars.split(',').map(star => star.toLowerCase().trim()).sort((a, b) => {return (b < a) ? 1 : -1;}).join(', ') === movie.Stars.split(',').map(star => star.toLowerCase().trim()).sort((a, b) => {return (b < a) ? 1 : -1;}).join(', ') ));
+    if (movieExist) {error = true} else
+    {const starsArr = movie.Stars.split(',');
+    const starsSet = [...new Set(starsArr)];
+    if (starsSet.length < starsArr.length) {movie.Stars = starsSet.split(',')}}}}
+    if (!error) {dispatch(startAddMovie(movie))}; 
+  };
   
   const showFile = async (e) => {
     e.preventDefault()
     const reader = new FileReader()
     reader.onload = async (e) => { 
       const text = (e.target.result);
-      text.includes("\r\n") ? text.split("\r\n\r\n").map(movie => {let arr = movie.split("\r\n").map(movie => {let obj = {}; let arr = movie.split(": "); obj[arr[0]]=arr[1]; return obj}); return Object.assign({},...arr)}).forEach(movie => dispatch(startAddMovie(movie))) :
-      text.split("\n\n").map(movie => {let arr = movie.split("\n").map(movie => {let obj = {}; let arr = movie.split(": "); obj[arr[0]]=arr[1]; return obj}); return Object.assign({},...arr)}).forEach(movie => dispatch(startAddMovie(movie)));;
+      text.includes("\r\n") ? text.split("\r\n\r\n").map(movie => {let arr = movie.split("\r\n").map(movie => {let obj = {}; let arr = movie.split(": "); obj[arr[0]]=arr[1]; return obj}); return Object.assign({},...arr)}).forEach(movie => check(movie)) :
+      text.split("\n\n").map(movie => {let arr = movie.split("\n").map(movie => {let obj = {}; let arr = movie.split(": "); obj[arr[0]]=arr[1]; return obj}); return Object.assign({},...arr)}).forEach(movie => check(movie));;
     };
     reader.readAsText(e.target.files[0])
   };
