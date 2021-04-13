@@ -25,7 +25,6 @@ export const removeMovie = ({id} = {}) => ({
   });
   
 export const startRemoveMovie = (id) => {
-    console.log(id);
     return (dispatch, getState) => {
         database.ref(`movies/${id}`).remove().then(() => {
             dispatch(removeMovie({ id }));
@@ -60,7 +59,6 @@ export const setMovies = (movies) => ({
   });
   
   export const startEditMovie = (id, updates) => {
-      console.log(id, updates);
     return (dispatch, getState) => {
       database.ref(`movies/${id}`).update({
         ...updates
